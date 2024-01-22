@@ -2,7 +2,8 @@ import jwt from "jsonwebtoken";
 const jwtSecretkey = process.env.JWT_SECRET_KEY;
 
 export default function isAuthByJWT(req, res, next) {
-  const jwtToken = req.headers["jwt-token"];
+  const jwtToken = req.cookies["jwt-token"] || req.headers["jwt-token"];
+  // console.log({ jwt_cookie: req.cookies["jwt-token"] });
 
   const clerkID = req.user?.sub;
 

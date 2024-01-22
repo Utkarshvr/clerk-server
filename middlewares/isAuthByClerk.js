@@ -2,9 +2,8 @@ import jwt from "jsonwebtoken";
 const publicKey = process.env.CLERK_PEM_PUBLIC_KEY;
 
 export default function isAuthByClerk(req, res, next) {
-  const ClerkToken = req.headers["clerk-token"];
-  console.log(req.body);
-  console.log(req.headers);
+  // Cookies are for Web Apps, Headers JWT are for mobile apps
+  const ClerkToken = req.cookies["__session"] || req.headers["clerk-token"];
   console.log({ ClerkToken });
 
   if (!ClerkToken)

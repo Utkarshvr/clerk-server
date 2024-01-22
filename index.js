@@ -7,14 +7,18 @@ import connectToDB from "./utils/connectToDB.js";
 import User from "./User.js";
 import isAuthByClerk from "./middlewares/isAuthByClerk.js";
 import isAuthByJWT from "./middlewares/isAuthByJWT.js";
+import { v4 } from "uuid";
+import cookieParser from "cookie-parser";
 
 const app = express();
 connectToDB();
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(
   cors({
     origin: "http://localhost:5173",
+    credentials: true,
   })
 );
 
@@ -45,14 +49,28 @@ app.post("/auth/login", isAuthByClerk, async (req, res) => {
     // TODO: Send cookie too, and handle cookies for website, and headers for mobile
     return res
       .status(200)
+      .cookie("jwt-token", jwtToken, {
+        maxAge: 84600 * 1000 * 7,
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      })
       .json({ user: existingUser, msg: "Logged in", jwtToken });
   }
 
   // Create
-  const newUser = await User.create({ clerkID, username, email, picture });
+  const newUser = await User.create({
+    clerkID,
+    username: username || v4(),
+    email,
+    picture,
+  });
   const jwtToken = jwt.sign({ user: newUser }, jwtSecretkey);
 
-  return res.status(201).json({ user: newUser, msg: "Signed up", jwtToken });
+  return res
+    .status(201)
+    .cookie("jwt-token", jwtToken, { maxAge: 84600 * 1000 * 7 })
+    .json({ user: newUser, msg: "Signed up", jwtToken });
 });
 
 app.get("/my-profile", isAuthByClerk, isAuthByJWT, (req, res) => {
